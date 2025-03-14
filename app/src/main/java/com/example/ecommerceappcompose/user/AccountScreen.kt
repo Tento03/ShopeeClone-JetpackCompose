@@ -56,7 +56,7 @@ fun AccountScreen(navController: NavController) {
             TopAppBar(
                 title = {
                     Column {
-                        TextButton(onClick = { navController.navigate("AddShop") }) {
+                        TextButton(onClick = { navController.navigate("AddProduct") }) {
                             Text("Mulai Jual", color = Color.Black, fontSize = 20.sp)
                         }
                     }
@@ -68,7 +68,7 @@ fun AccountScreen(navController: NavController) {
                 },
                 modifier = Modifier.background(Color.Green),
                 actions = {
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = {navController.navigate("AddShop")}) {
                         Icon(Icons.Filled.Settings, null)
                     }
                     IconButton(onClick = {}) {
