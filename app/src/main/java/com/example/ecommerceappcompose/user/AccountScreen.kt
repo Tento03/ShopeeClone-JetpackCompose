@@ -20,6 +20,7 @@ import androidx.navigation.NavController
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -50,33 +51,6 @@ import java.io.ByteArrayOutputStream
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun AccountScreen(navController: NavController) {
-    val firebaseAuth = FirebaseAuth.getInstance()
-    val firebaseDatabase = FirebaseDatabase.getInstance().getReference("user")
-    val firebaseStorage = FirebaseStorage.getInstance().reference.child("profile_images")
-    val uid = firebaseAuth.currentUser?.uid
-
-    var uri by remember { mutableStateOf<Uri?>(null) }
-    var imageUrl by remember { mutableStateOf<String?>(null) }
-    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
-
-    val context = LocalContext.current
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { selectedUri ->
-        selectedUri?.let {
-            uri = it
-            if (Build.VERSION.SDK_INT < 28) {
-                bitmap = Media.getBitmap(context.contentResolver, it)
-            } else {
-                val source = ImageDecoder.createSource(context.contentResolver, it)
-                bitmap = ImageDecoder.decodeBitmap(source)
-            }
-
-            // Simpan gambar ke Firebase Storage
-            uploadImageToStorage(bitmap, firebaseStorage, uid, firebaseDatabase)
-        }
-    }
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -88,8 +62,8 @@ fun AccountScreen(navController: NavController) {
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = {}) {
-                        Icon(Icons.Filled.ShoppingCart, null)
+                    IconButton(onClick = {navController.navigate("AddProduct")}) {
+                        Icon(Icons.Filled.AccountCircle, null)
                     }
                 },
                 modifier = Modifier.background(Color.Green),
@@ -107,42 +81,57 @@ fun AccountScreen(navController: NavController) {
             )
         },
         content = {
+            val context = LocalContext.current
+            var uri by remember { mutableStateOf<Uri?>(null) }
+            var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+
+            // Activity Result Launcher to select an image from the gallery
+            val launcher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.GetContent()
+            ) { selectedUri ->
+                selectedUri?.let {
+                    uri = it
+                    bitmap = if (Build.VERSION.SDK_INT < 28) {
+                        Media.getBitmap(context.contentResolver, it)
+                    } else {
+                        val source = ImageDecoder.createSource(context.contentResolver, it)
+                        ImageDecoder.decodeBitmap(source)
+                    }
+                }
+            }
+
             Column(
                 modifier = Modifier.padding(start = 20.dp, top = 100.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Row {
-                    if (uid != null) {
-                        firebaseDatabase.child(uid).addValueEventListener(object : ValueEventListener {
-                            override fun onDataChange(snapshot: DataSnapshot) {
-                                if (snapshot.exists()) {
-                                    val user = snapshot.getValue(User::class.java)
-                                    imageUrl = user?.image.toString()
-                                }
-                            }
-
-                            override fun onCancelled(error: DatabaseError) {
-                                // Handle error
-                            }
-                        })
-                    }
-
-                    if (imageUrl != null) {
-                        AsyncImage(
-                            model = imageUrl,
+                    if (bitmap != null) {
+                        // Jika bitmap sudah ada (gambar dipilih), tampilkan gambar dari bitmap
+                        Image(
+                            bitmap = bitmap!!.asImageBitmap(),
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
-                            modifier = Modifier.size(75.dp).aspectRatio(1f).clip(CircleShape).border(2.dp, Color.Gray)
+                            modifier = Modifier
+                                .size(75.dp)
+                                .aspectRatio(1f)
+                                .clip(CircleShape)
+                                .border(2.dp, Color.Gray)
                                 .clickable {
                                     launcher.launch("image/*")
                                 }
                         )
                     } else {
+                        // Jika bitmap masih null, tampilkan placeholder dari drawable
                         Image(
-                            painter = painterResource(R.drawable.img), null,
-                            contentScale = ContentScale.FillBounds,
-                            modifier = Modifier.size(75.dp).aspectRatio(1f).clip(CircleShape).border(2.dp, Color.Gray)
+                            painter = painterResource(id = R.drawable.img),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(75.dp)
+                                .aspectRatio(1f)
+                                .clip(CircleShape)
+                                .border(2.dp, Color.Gray)
                                 .clickable {
                                     launcher.launch("image/*")
                                 }
@@ -165,23 +154,3 @@ fun AccountScreen(navController: NavController) {
     )
 }
 
-fun uploadImageToStorage(
-    bitmap: Bitmap?,
-    storageReference: StorageReference,
-    uid: String?,
-    databaseReference: DatabaseReference
-) {
-    if (bitmap == null || uid == null) return
-
-    val baos = ByteArrayOutputStream()
-    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
-    val data = baos.toByteArray()
-
-    val imageRef = storageReference.child("$uid.jpg")
-    val uploadTask = imageRef.putBytes(data)
-    uploadTask.addOnSuccessListener {
-        imageRef.downloadUrl.addOnSuccessListener { uri ->
-            databaseReference.child(uid).child("image").setValue(uri.toString())
-        }
-    }
-}

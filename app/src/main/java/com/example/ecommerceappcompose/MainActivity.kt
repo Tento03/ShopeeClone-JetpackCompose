@@ -7,27 +7,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.input.ImeAction
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -36,6 +19,7 @@ import com.example.ecommerceappcompose.auth.RegisterScreen
 import com.example.ecommerceappcompose.model.Route
 import com.example.ecommerceappcompose.ui.theme.EcommerceAppComposeTheme
 import com.example.ecommerceappcompose.user.AccountScreen
+import com.example.ecommerceappcompose.user.AddProductScreen
 import com.example.ecommerceappcompose.user.AddShopScreen
 import com.example.ecommerceappcompose.user.BottomNavigation
 import com.example.ecommerceappcompose.user.TrendingScreen
@@ -79,6 +63,9 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("AddShop"){
                             AddShopScreen(navController)
+                        }
+                        composable("AddProduct"){
+                            AddProductScreen(navController)
                         }
                     }
                 }
