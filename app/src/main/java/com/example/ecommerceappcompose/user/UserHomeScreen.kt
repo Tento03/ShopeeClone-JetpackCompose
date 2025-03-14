@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -40,7 +41,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ecommerceappcompose.R
+import com.example.ecommerceappcompose.model.Product
 import com.example.ecommerceappcompose.model.Shopee
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.getValue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -54,7 +61,27 @@ fun UserHomeScreen(modifier: Modifier = Modifier) {
         Shopee("Later", R.drawable.shopee_later),
     )
     var query by remember { mutableStateOf("") }
+    var productList = remember { mutableStateListOf<Product>() }
     val keyboardController= LocalSoftwareKeyboardController.current
+
+    val firebaseDatabase=FirebaseDatabase.getInstance().getReference("product")
+    firebaseDatabase.addValueEventListener(object :ValueEventListener{
+        override fun onDataChange(snapshot: DataSnapshot) {
+            if (snapshot.exists()){
+                productList.clear()
+                for (i in snapshot.children){
+                    val product=i.getValue(Product::class.java)
+                    if (product!=null){
+                        productList.add(product)
+                    }
+                }
+            }
+        }
+
+        override fun onCancelled(error: DatabaseError) {
+        }
+
+    })
 
     Scaffold(
         topBar = {
@@ -103,15 +130,16 @@ fun UserHomeScreen(modifier: Modifier = Modifier) {
                 }
 
                 LazyColumn(modifier.fillMaxWidth().padding(16.dp),
-                    horizontalAlignment =  Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                    items(shopeeList.chunked(2)){ rowItems->
+                    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                    items(productList.chunked(2)){productRow->
                         Row(horizontalArrangement = Arrangement.SpaceBetween) {
-                            rowItems.forEach { shope->
-                                LazyColumnItemCard(shope)
+                            productRow.forEach {
+                                LazyColumnItemCard(it)
                             }
                         }
                     }
                 }
+
             }
         }
     )
@@ -148,7 +176,7 @@ fun LazyRowHomeCard(shopee: Shopee, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun LazyColumnItemCard(shopee: Shopee, modifier: Modifier = Modifier) {
+fun LazyColumnItemCard(product: Product, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier
             .padding(8.dp)
@@ -163,14 +191,14 @@ fun LazyColumnItemCard(shopee: Shopee, modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
-                painter = painterResource(shopee.icon),
+                painter = painterResource(R.drawable.img),
                 contentScale = ContentScale.FillBounds,
                 contentDescription = null,
                 modifier = Modifier.size(100.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = shopee.label,
+                text = product.image,
                 textAlign = TextAlign.Center
             )
         }
