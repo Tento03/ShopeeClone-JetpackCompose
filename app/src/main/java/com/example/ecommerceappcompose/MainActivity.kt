@@ -36,6 +36,7 @@ import com.example.ecommerceappcompose.auth.RegisterScreen
 import com.example.ecommerceappcompose.model.Route
 import com.example.ecommerceappcompose.ui.theme.EcommerceAppComposeTheme
 import com.example.ecommerceappcompose.user.AccountScreen
+import com.example.ecommerceappcompose.user.AddShopScreen
 import com.example.ecommerceappcompose.user.BottomNavigation
 import com.example.ecommerceappcompose.user.TrendingScreen
 import com.example.ecommerceappcompose.user.UserHomeScreen
@@ -75,6 +76,9 @@ class MainActivity : ComponentActivity() {
                         }
                         composable(Route.Account.screen){
                             AccountScreen(navController)
+                        }
+                        composable("AddShop"){
+                            AddShopScreen(navController)
                         }
                     }
                 }

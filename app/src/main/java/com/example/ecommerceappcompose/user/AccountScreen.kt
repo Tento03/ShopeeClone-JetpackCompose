@@ -82,7 +82,7 @@ fun AccountScreen(navController: NavController) {
             TopAppBar(
                 title = {
                     Column {
-                        TextButton(onClick = { navController.navigate("") }) {
+                        TextButton(onClick = { navController.navigate("AddShop") }) {
                             Text("Mulai Jual", color = Color.Black, fontSize = 20.sp)
                         }
                     }
